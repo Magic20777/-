@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inwestycja - Progres</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background-color: #1e1e1e;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: row;
+      gap: 40px;
+      width: 90%;
+      max-width: 1000px;
+      align-items: center;
+    }
+
+    .left {
+      flex: 1;
+    }
+
+    .right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+      height: 100%;
+    }
+
+    .status {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .green {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .green:hover {
+      background-color: #45a049;
+    }
+
+    .red {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .red:hover {
+      background-color: #d32f2f;
+    }
+
+    canvas {
+      background: #1e1e1e;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="left">
+    <canvas id="investmentChart" width="400" height="300"></canvas>
+  </div>
+  <div class="right">
+    <div class="status" id="amountDisplay">Kwota: 400.00 zł</div>
+    <div class="status" id="daysDisplay">Dni: 0</div>
+    <div class="buttons">
+      <button class="green" id="addDayBtn">✔️</button>
+      <button class="red" id="resetBtn">END</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const initialAmount = 400;
+  const dailyGrowth = 0.20;
+
+  let days = parseInt(localStorage.getItem('investmentDays')) || 0;
+  let amount = parseFloat(localStorage.getItem('investmentAmount')) || initialAmount;
+  let history = JSON.parse(localStorage.getItem('investmentHistory')) || [initialAmount];
+
+  const amountDisplay = document.getElementById('amountDisplay');
+  const daysDisplay = document.getElementById('daysDisplay');
+  const addDayBtn = document.getElementById('addDayBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const ctx = document.getElementById('investmentChart').getContext('2d');
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Array.from({ length: history.length }, (_, i) => `Dzień ${i}`),
+      datasets: [{
+        label: 'Wartość inwestycji (zł)',
+        data: history,
+        borderColor: '#4CAF50',
+        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+        borderWidth: 3,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: { color: '#ccc' }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#ccc' }
+        },
+        y: {
+          ticks: { color: '#ccc' },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  function updateUI() {
+    amountDisplay.textContent = `Kwota: ${amount.toFixed(2)} zł`;
+    daysDisplay.textContent = `Dni: ${days}`;
+    chart.data.labels = Array.from({ length: history.length }, (_, i) => `Dzień ${i}`);
+    chart.data.datasets[0].data = history;
+    chart.update();
+  }
+
+  function saveState() {
+    localStorage.setItem('investmentDays', days);
+    localStorage.setItem('investmentAmount', amount);
+    localStorage.setItem('investmentHistory', JSON.stringify(history));
+  }
+
+  addDayBtn.addEventListener('click', () => {
+    days += 1;
+    amount = amount * (1 + dailyGrowth);
+    history.push(amount);
+    updateUI();
+    saveState();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    days = 0;
+    amount = initialAmount;
+    history = [initialAmount];
+    updateUI();
+    saveState();
+  });
+
+  updateUI();
+</script>
+
+</body>
+</html>
